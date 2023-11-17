@@ -27,9 +27,10 @@ import sys
 sys.path.append("..")
 
 import time
-import random
+import pandas as pd
 import os
 import numpy as np
+import random
 import streamlit as st
 from dotenv import load_dotenv
 from backend.neural_searcher import NeuralSearcher
@@ -39,7 +40,7 @@ import qdrant_client
 from langchain.vectorstores import Qdrant
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.llms import OpenAI
-from langchain.chains import RetrievalQA
+from langchain.chains import RetrievalQAWithSourcesChain
 
 load_dotenv('../.env')
 
@@ -67,17 +68,61 @@ def Retriever():
 
     llm = OpenAI(openai_api_key=OPENAI_API_KEY)
 
-    qa = RetrievalQA.from_chain_type(
+    qa = RetrievalQAWithSourcesChain.from_chain_type(
         llm=llm,
         chain_type="stuff",
-        retriever=vector_store.as_retriever(),
+        retriever=vector_store.as_retriever(search_kwargs={'k':2}),
+        return_source_documents=True
     )
 
     return qa
 
 @st.cache_data
 def search(_retriever, user_question):
-    return _retriever.run(user_question)
+    res = _retriever({"question": user_question})
+    return res
+
+def display_data(res):
+    srcs = [row.page_content for row in res['source_documents']]
+
+    dicts = []
+    for src in srcs:
+        key_value = src.split("\n")
+        dict = {}
+        for v in key_value:
+            aux = v.split(": ")
+            dict[aux[0]] = aux[1]
+        dicts.append(dict)
+    
+    df = pd.DataFrame(dicts)
+    # df.set_index('product', inplace=True)
+
+    df1 = df[['product','brand', 'sale_price', 'rating', 'description']]
+
+    st.dataframe(
+        df1,
+        column_config={
+            "product": st.column_config.Column(
+                "Product Name",
+                width="medium"
+            ),
+            "brand": "Brand",
+            "sale_price": st.column_config.NumberColumn(
+                "Sale Price",
+                help="The price of the product in USD",
+                min_value=0,
+                max_value=1000,
+                format="₹%f",
+            ),
+            "rating": st.column_config.NumberColumn(
+                "Rating",
+                help="Rating of the product",
+                format="%f ⭐",
+            ),
+            "description": "Description",
+        },
+        hide_index=True,
+    )
 
 def main():
     st.set_page_config(
@@ -104,17 +149,14 @@ def main():
         st.write("Hello 👋\n\n I am here to help you choose the product that you wanna buy!")
 
     if prompt:=st.chat_input("Say something"):
-        # st.write(neural_searcher.search(text=user_question))
 
         with st.chat_message("user"):
             st.markdown(f'{prompt}')
-        # for hit in neural_searcher.search(text=user_question):
-        #     st.write(hit)
-        #     st.write('---')
 
         # Recommend me some product using which I can make bread
 
-        answer = search(retriever, prompt)
+        res = search(retriever, prompt)
+        answer = res['answer']
         # answer = prompt
 
         # Display assistant response in chat message container
@@ -129,6 +171,9 @@ def main():
                 # Add a blinking cursor to simulate typing
                 message_placeholder.markdown(full_response + "▌")
             message_placeholder.markdown(full_response)
+
+            # Dsiplay product details
+            display_data(res)
 
 
 
