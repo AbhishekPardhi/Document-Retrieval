@@ -98,3 +98,6 @@ After getting the products, you can sort them on the basis of Sale Price and Rat
 Complete Code (dev) for performing DocRetrieval over bigBasketProducts.csv could be found in [Colab Notebook](https://colab.research.google.com/github/AbhishekPardhi/Document-Retrieval/blob/main/test.ipynb)
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AbhishekPardhi/Document-Retrieval/blob/main/test.ipynb)
+
+## Limitations and Future Scope
+Currently the chain of chats are independent of each other. This can be easily changed by using previous responses as a context while retrieving results for the current question. But this will also increase the number of tokens that will be used for performing search operation, and hence the cost of each search.
