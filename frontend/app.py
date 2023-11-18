@@ -29,9 +29,9 @@ sys.path.append("..")
 import time
 import pandas as pd
 import os
-import numpy as np
-import random
 import streamlit as st
+from streamlit_extras.mention import mention
+from streamlit_extras.badges import badge 
 from dotenv import load_dotenv
 from backend.neural_searcher import NeuralSearcher
 # from backend.config import COLLECTION_NAME, QDRANT_URL, QDRANT_API_KEY, OPENAI_API_KEY
@@ -49,10 +49,13 @@ QDRANT_API_KEY = os.getenv('QDRANT_API_KEY')
 COLLECTION_NAME = os.getenv('COLLECTION_NAME')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
+K=2
+
 # neural_searcher = NeuralSearcher(collection_name=COLLECTION_NAME)
 
 @st.cache_resource
 def Retriever():
+    global K
     client = qdrant_client.QdrantClient(
         url=QDRANT_URL,
         api_key=QDRANT_API_KEY
@@ -71,7 +74,7 @@ def Retriever():
     qa = RetrievalQAWithSourcesChain.from_chain_type(
         llm=llm,
         chain_type="stuff",
-        retriever=vector_store.as_retriever(search_kwargs={'k':2}),
+        retriever=vector_store.as_retriever(search_kwargs={'k':K}),
         return_source_documents=True
     )
 
@@ -106,7 +109,10 @@ def display_data(res):
                 "Product Name",
                 width="medium"
             ),
-            "brand": "Brand",
+            "brand": st.column_config.Column(
+                "Brand",
+                width="medium"
+            ),
             "sale_price": st.column_config.NumberColumn(
                 "Sale Price",
                 help="The price of the product in USD",
@@ -125,12 +131,38 @@ def display_data(res):
     )
 
 def main():
+    global K
     st.set_page_config(
         page_title="BigBasket Products",
         page_icon="🧺",
         layout="centered",
         initial_sidebar_state="expanded",
     )
+
+    with st.sidebar:
+
+        st.markdown(
+            """This is an app interface for [Document-Retrieval](https://python.langchain.com/docs/modules/data_connection/) on :green[BigBasketProducts.csv] using :blue[Streamlit].
+            This Query Engine uses :blue[Qdrant] for vector DB & :blue[LangChain] for performing semantic search.  
+            [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+            [![VectorDB: Qdrant](https://img.shields.io/badge/VectorDB-Qdrant-blue)](https://github.com/qdrant/qdrant)
+            [![Embeddings: OpenAI](https://img.shields.io/badge/Embeddings-OpenAI-blue)](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings)
+            [![Retriever: LanghChain](https://img.shields.io/badge/Retriever-LanghChain-blue)](https://github.com/langchain-ai/langchain)
+            """
+        )
+
+        mention(
+            label="Document-Retrieval",
+            icon="github",  # GitHub is also featured!
+            url="https://github.com/AbhishekPardhi/Document-Retrieval",
+        )
+
+        # st.write('---')
+
+        st.subheader('Parameters')
+        K = st.slider('K', 1, 10, 2, help='Sets max number of products  \nthat can be retrieved')
+        
+
 
     st.header('BigBasket Products',divider=True)
 
