@@ -1,12 +1,12 @@
 # Document-Retrieval (Qdrant+LangChain+FastAPI)
-This repo is an implementation of [Document Retrieval](https://python.langchain.com/docs/modules/data_connection/) as part of the Assignment of chaabi for SDE-1 role - Placements'23. This Query Engine uses [Qdrant](https://github.com/qdrant/qdrant) for vector database, [LangChain](https://github.com/langchain-ai/langchain) for performing semantic search and [Streamlit](https://streamlit.io/) for user-interface. The DB is hosted on Qdrant Cloud as a cluster with a collection of vectors. I've used _OpenAIEmbeddings_ for embedding the vectors.
+This repo is an implementation of [Document Retrieval](https://python.langchain.com/docs/modules/data_connection/) as part of the Assignment of chaabi for SDE-1 role - Placements'23. This Query Engine uses [Qdrant](https://github.com/qdrant/qdrant) for vector database, [LangChain](https://github.com/langchain-ai/langchain) for performing semantic search and [Streamlit](https://streamlit.io/) for user-interface. The DB is hosted on Qdrant Cloud as a cluster with a collection of vectors. I've used [OpenAIEmbeddings](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings) for embedding the vectors.
 
 ## DocRetrieval in action
 
 ![demo](data/chat-demo.gif)
 
 ## API
-I've used FastAPI for the retreival service which can be run with curl as follows:
+I've used FastAPI for the retreival service which can be ran with curl command as follows:
 ```
 curl -X 'GET' \
   'http://127.0.0.1:8000/api/search?q=I%20want%20to%20buy%20shampoo' \
@@ -49,10 +49,18 @@ Response:
 }
 ```
 
-### Setup
+## Setup
 Install all required modules
 ```
 pip install -r requirements.txt
+```
+Setup .env file at root directory of this repo having following fields:
+```
+QDRANT_URL="your-qdrant-url"
+QDRANT_API_KEY="your-qdrant-api-key"
+COLLECTION_NAME="big-basket-products"
+OPENAI_API_KEY="your-openai-api-key"
+FILE_PATH="data/bigBasketProducts.csv"
 ```
 
 ### Create Collection
@@ -63,13 +71,13 @@ python init_collections_products.py
 ```
 
 ### Perform Search
-Search for best match vector stored in DB.
+Search for the best match vectors stored in DB.
 ```
 python service.py
 ```
-Now open http://127.0.0.1:8000/docs in your browser and put value of `q` (question) in the query.
+Now open http://127.0.0.1:8000/docs in your browser and put the value of `q` (question) in query.
 
-### Running Streamlit App
+## Running Streamlit App
 You can also use the web interface for running the application.
 ```
 cd frontend
@@ -85,3 +93,8 @@ You can set the search parameter `K` that controls the maximum number of product
 After getting the products, you can sort them on the basis of Sale Price and Rating.
 
 ![demo](data/chat-sort.gif)
+
+## Colab Notebook
+Complete Code (dev) for performing DocRetrieval over bigBasketProducts.csv could be found in [Colab Notebook](https://colab.research.google.com/github/AbhishekPardhi/Document-Retrieval/blob/main/test.ipynb)
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AbhishekPardhi/Document-Retrieval/blob/main/test.ipynb)
