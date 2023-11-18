@@ -14,5 +14,3 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 COLLECTION_NAME = os.environ.get("COLLECTION_NAME")
 EMBEDDINGS_MODEL = os.environ.get("EMBEDDINGS_MODEL")
-
-TEXT_FIELD_NAME = "document"

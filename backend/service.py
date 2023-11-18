@@ -1,4 +1,6 @@
 import os
+import sys
+sys.path.append("..")
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -23,7 +25,7 @@ neural_searcher = NeuralSearcher(collection_name=COLLECTION_NAME)
 @app.get("/api/search")
 async def read_item(q: str):
     return {
-        "result": neural_searcher.search(text=q)
+        "result": neural_searcher.search(question=q)
     }
 
 # Mount the static files directory once the search endpoint is defined

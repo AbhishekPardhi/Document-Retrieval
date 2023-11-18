@@ -4,11 +4,11 @@ import os.path
 from tqdm import tqdm
 
 import qdrant_client
-from qdrant_client import models
+from langchain.vectorstores import Qdrant
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.document_loaders.csv_loader import CSVLoader
 
-from backend.config import DATA_DIR, QDRANT_URL, QDRANT_API_KEY, COLLECTION_NAME, TEXT_FIELD_NAME, EMBEDDINGS_MODEL
+from backend.config import DATA_DIR, QDRANT_URL, QDRANT_API_KEY, COLLECTION_NAME
 
 def upload_embeddings():
     # Create client
@@ -18,57 +18,41 @@ def upload_embeddings():
         prefer_grpc=True,
     )
 
-    client.set_model(EMBEDDINGS_MODEL)
-
-    # Load data
-    payload_path = os.path.join(DATA_DIR, 'bigBasketProducts.csv')
-
-    loader = CSVLoader(file_path=payload_path, source_column=('rating'), csv_args={'delimiter': ','}, autodetect_encoding=True)
-    documents = loader.load()
-    documents = documents[:100]
-
-    docs = [doc.page_content for doc in documents]
-    payload = [doc.payload for doc in documents]
-
-    # Create collection
+    # create collection
     vectors_config = qdrant_client.http.models.VectorParams(
         size=1536,
         distance=qdrant_client.http.models.Distance.COSINE,
     )
 
+    # Load data
+    file_path = os.path.join(DATA_DIR, 'bigBasketProducts.csv')
+
+    loader = CSVLoader(file_path=file_path, source_column=('rating'), csv_args={'delimiter': ','}, autodetect_encoding=True)
+    documents = loader.load()
+    documents = documents[:100]
+
+    docs = [doc.page_content for doc in documents]
+    metadatas = [doc.metadata for doc in documents]
+
     client.recreate_collection(
         collection_name=COLLECTION_NAME,
         vectors_config=vectors_config,
-        # Quantization is optional, but it can significantly reduce the memory usage
-        quantization_config=models.ScalarQuantization(
-            scalar=models.ScalarQuantizationConfig(
-                type=models.ScalarType.INT8,
-                quantile=0.99,
-                always_ram=True
-            )
-        )
     )
 
-    # Create a payload index for text field.
-    # This index enables text search by the TEXT_FIELD_NAME field.
-    client.create_payload_index(
+    # create vector store
+    embeddings = OpenAIEmbeddings()
+
+    vector_store = Qdrant(
+        client=client,
         collection_name=COLLECTION_NAME,
-        field_name=TEXT_FIELD_NAME,
-        field_schema=models.TextIndexParams(
-            type=models.TextIndexType.TEXT,
-            tokenizer=models.TokenizerType.WORD,
-            min_token_len=2,
-            max_token_len=20,
-            lowercase=True,
-        )
+        embeddings=embeddings,
     )
 
-    client.add(
-        collection_name=COLLECTION_NAME,
-        documents=docs,
-        metadata=payload,
-        ids=tqdm(range(len(payload))),
-        parallel=0,
+    # add documents to vector store
+    vector_store.add_texts(
+        texts=docs,
+        metadatas=metadatas,
+        ids=[str(i) for i in tqdm(range(len(docs)))],
     )
 
 
