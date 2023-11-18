@@ -1,4 +1,5 @@
 *.env
-frontend/local_cache/
+**/local_cache
 lib/
 *.log
+**/__pycache__
