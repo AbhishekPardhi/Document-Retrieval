@@ -1,40 +1,13 @@
-# import streamlit as st
-# import pandas as pd
-
-# st.title('Chaabi App')
-
-
-# DATE_COLUMN = 'date/time'
-# DATA_URL = ('https://s3-us-west-2.amazonaws.com/'
-#          'streamlit-demo-data/uber-raw-data-sep14.csv.gz')
-
-# @st.cache_data
-# def load_data(nrows):
-#     data = pd.read_csv(DATA_URL, nrows=nrows)
-#     lowercase = lambda x: str(x).lower()
-#     data.rename(lowercase, axis='columns', inplace=True)
-#     data[DATE_COLUMN] = pd.to_datetime(data[DATE_COLUMN])
-#     return data
-
-# # Create a text element and let the reader know the data is loading.
-# data_load_state = st.text('Loading data...')
-# # Load 10,000 rows of data into the dataframe.
-# data = load_data(10000)
-# # Notify the reader that the data was successfully loaded.
-# data_load_state.text('Done! (using st.cache_data)')
-
 import sys
 sys.path.append("..")
 
+import os
+import json
 import time
 import pandas as pd
-import os
 import streamlit as st
 from streamlit_extras.mention import mention
-from streamlit_extras.badges import badge 
 from dotenv import load_dotenv
-from backend.neural_searcher import NeuralSearcher
-# from backend.config import COLLECTION_NAME, QDRANT_URL, QDRANT_API_KEY, OPENAI_API_KEY
 
 import qdrant_client
 from langchain.vectorstores import Qdrant
@@ -49,7 +22,7 @@ QDRANT_API_KEY = os.getenv('QDRANT_API_KEY')
 COLLECTION_NAME = os.getenv('COLLECTION_NAME')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
-K=2
+K=4
 
 # neural_searcher = NeuralSearcher(collection_name=COLLECTION_NAME)
 
@@ -75,7 +48,8 @@ def Retriever():
         llm=llm,
         chain_type="stuff",
         retriever=vector_store.as_retriever(search_kwargs={'k':K}),
-        return_source_documents=True
+        return_source_documents=True,
+        reduce_k_below_max_tokens=True
     )
 
     return qa
@@ -86,21 +60,15 @@ def search(_retriever, user_question):
     return res
 
 def display_data(res):
-    srcs = [row.page_content for row in res['source_documents']]
+    srcs = [json.loads(row.page_content) for row in res['source_documents']]
 
-    dicts = []
-    for src in srcs:
-        key_value = src.split("\n")
-        dict = {}
-        for v in key_value:
-            aux = v.split(": ")
-            dict[aux[0]] = aux[1]
-        dicts.append(dict)
-    
-    df = pd.DataFrame(dicts)
+    df = pd.DataFrame(srcs)
     # df.set_index('product', inplace=True)
 
     df1 = df[['product','brand', 'sale_price', 'rating', 'description']]
+
+    # Remove duplicates
+    df1 = df1.drop_duplicates()
 
     st.dataframe(
         df1,
@@ -160,7 +128,7 @@ def main():
         # st.write('---')
 
         st.subheader('Parameters')
-        K = st.slider('K', 1, 10, 2, help='Sets max number of products  \nthat can be retrieved')
+        K = st.slider('K', 1, 10, 4, help='Sets max number of products  \nthat can be retrieved')
         
 
 

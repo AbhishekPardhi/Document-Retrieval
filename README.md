@@ -9,43 +9,31 @@ This repo is an implementation of [Document Retrieval](https://python.langchain.
 I've used FastAPI for the retreival service which can be ran with curl command as follows:
 ```
 curl -X 'GET' \
-  'http://127.0.0.1:8000/api/search?q=I%20want%20to%20buy%20shampoo' \
+  'http://127.0.0.1:8000/api/search?q=Suggest%20me%20some%20hair%20care%20products&num_results=2' \
   -H 'accept: application/json'
 ```
 Response:
 ```
 {
-  "result": [
-    {
-      "answer": " You can buy the Biotin & Collagen Volumizing Hair Shampoo + Biotin & Collagen Hair Conditioner from the brand StBotanica.\n",
-      "source_documents": [
-        {
-          "index": "65",
-          "product": "Aqua Halo Rejuvenating Conditioner",
-          "category": "Beauty & Hygiene",
-          "sub_category": "Hair Care",
-          "brand": "Azafran",
-          "sale_price": "168.75",
-          "market_price": "225",
-          "type": "Shampoo & Conditioner",
-          "rating": "1",
-          "description": "This Aqua Halo Rejuvenating Conditioner is an organic conditioner, which is specially formulated with moisturizing actives to add vibrancy and vitality to your hair. This natural hair conditioner provides long-lasting conditioning and colour protection. It controls unruly, dry and brittle hair and it is formulated for all hair types."
-        },
-        {
-          "index": "9",
-          "product": "Biotin & Collagen Volumizing Hair Shampoo + Biotin & Collagen Hair Conditioner",
-          "category": "Beauty & Hygiene",
-          "sub_category": "Hair Care",
-          "brand": "StBotanica",
-          "sale_price": "1098",
-          "market_price": "1098",
-          "type": "Shampoo & Conditioner",
-          "rating": "3.5",
-          "description": "An exclusive blend with Vitamin B7 Biotin, Hydrolyzed collagen, Oat Extract along with premium & organic cold-pressed ingredients helps to infuse nutrients into every strand and creates the appearance of thicker, fuller healthier looking hair. This powerful formula helps volumize even the skinniest strands into fuller and more abundant looking locks. It is safe for color-treated hair and safe for all hair types. St Botanica Biotin & Collagen Hair Conditioner has been specially formulated to repair dry & damaged hair for full, thick, voluminous, shiny & healthy looking hair! The amazing hair conditioner ingredients include Biotin, Hydrolyzed Collagen, Pro-Vitamin B5, Vitamin E, & Hydrolyzed Silk Proteins for glistening looking hair. Biotin and Collagen, infused with most efficacious natural extracts not only promotes healthy hair growth but also prevents hair dryness, increases the elasticity of the hair cortex, thereby strengthening hair, minimizing hair breakage and helping hair grow longer, healthier and thicker. PLUMP IT UP"
-        }
-      ]
-    }
-  ]
+  "result": {
+    "answer": " Suggested hair care products include the Daily Use Hair Conditioner - For Men and the Hairfall Control Shampoo.\n",
+    "products": [
+      {
+        "product": "Daily Use Hair Conditioner - For Men",
+        "brand": "USTRAA",
+        "sale_price": 153.23,
+        "rating": 3.8,
+        "description": "Using conditioner after shampoo keeps your hair soft and manageable. This daily use conditioner contains Vitamin E which helps to increase blood flow to the scalp and promote hair health and quality. It also has Water Hyssop (Brahmi) which is one of best-known Ayurvedic ingredients that strengthen hair follicles and checks split ends. Due to the presence of wheat gram, it is enriched with Vitamin B which is a great conditioner for hair. It has Evening Primrose which nourishes the scalp and promotes healthy hair growth."
+      },
+      {
+        "product": "Hairfall Control Shampoo",
+        "brand": "Aroma Magic ",
+        "sale_price": 182.75,
+        "rating": 4.1,
+        "description": "This Hairfall control shampoo is 100% free of parabens, petrochemicals, phthalates, sulphates, toxic ingredients, artificial colouring and fragrances. Enriched with natural oils and essential oils of clary sage and lavender, it helps balance the pH levels of the scalp and strengthen hair strands. The plant juice of aloe vera and reetha deeply cleans and conditions the hair from the root to the tips. The extracts of thyme, peppermint and natural vitamins increase blood circulation to the scalp, thereby promoting hair growth and shine. Tocopherol in its formulation hydrates hair fibres while restoring natural moisture levels of the scalp, giving you back the control over your luscious hair."
+      }
+    ]
+  }
 }
 ```
 
@@ -76,6 +64,8 @@ Search for the best match vectors stored in DB.
 python service.py
 ```
 Now open http://127.0.0.1:8000/docs in your browser and put the value of `q` (question) in query.
+
+![demo](data/fast-api.png)
 
 ## Running Streamlit App
 You can also use the web interface for running the application.

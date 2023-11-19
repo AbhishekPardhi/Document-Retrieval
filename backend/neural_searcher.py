@@ -1,4 +1,6 @@
 import time
+import json
+import pandas as pd
 from typing import List
 
 from qdrant_client import QdrantClient
@@ -24,12 +26,13 @@ class NeuralSearcher:
         )
         self.llm = OpenAI(openai_api_key=OPENAI_API_KEY)
 
-    def search(self, question: str, filter_: dict = None) -> List[dict]:
+    def search(self, question: str, num_results: int, filter_: dict = None) -> dict:
         qa = RetrievalQAWithSourcesChain.from_chain_type(
             llm=self.llm,
             chain_type="stuff",
-            retriever=self.vector_store.as_retriever(search_kwargs={'k':2}),
-            return_source_documents=True
+            retriever=self.vector_store.as_retriever(search_kwargs={'k':num_results}),
+            return_source_documents=True,
+            reduce_k_below_max_tokens=True
         )
         start_time = time.time()
         res = qa({"question": question})
@@ -38,16 +41,16 @@ class NeuralSearcher:
         ret = {}
         ret['answer'] = res['answer']
 
-        srcs = [row.page_content for row in res['source_documents']]
+        srcs = [json.loads(row.page_content) for row in res['source_documents']]
 
-        dicts = []
-        for src in srcs:
-            key_value = src.split("\n")
-            dict = {}
-            for v in key_value:
-                aux = v.split(": ")
-                dict[aux[0]] = aux[1]
-            dicts.append(dict)
-        ret['source_documents'] = dicts
+        df = pd.DataFrame(srcs)
+        df = df.fillna('null')
+        # df.set_index('product', inplace=True)
 
-        return [ret]
+        df1 = df[['product','brand', 'sale_price', 'rating', 'description']]
+
+        # Remove duplicates
+        df1 = df1.drop_duplicates()
+
+        ret['products'] = df1.to_dict(orient='records')
+        return ret

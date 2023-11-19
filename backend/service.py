@@ -2,7 +2,7 @@ import os
 import sys
 sys.path.append("..")
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -23,9 +23,12 @@ app.add_middleware(
 neural_searcher = NeuralSearcher(collection_name=COLLECTION_NAME)
 
 @app.get("/api/search")
-async def read_item(q: str):
+async def read_item(
+    q: str = Query(..., title="User Question", description="Question asked by the user from the frontend"),
+    num_results: int = Query(..., title="Number of Results", description="Number of results to return")
+):
     return {
-        "result": neural_searcher.search(question=q)
+        "result": neural_searcher.search(question=q, num_results=num_results)
     }
 
 # Mount the static files directory once the search endpoint is defined
