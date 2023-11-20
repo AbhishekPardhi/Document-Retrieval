@@ -34,21 +34,22 @@ K=2
 @st.cache_resource(show_spinner=False)
 def PROMPT():
     prompt_template = '''
-    You are a Product Recommendation Agent who gets his context from the retrieved descriptions of the products that matches best with the User's query.
-    Answer my questions based on your knowledge and our older conversation. Do not make up answers.
-    If you do not know the answer to a question, just say "I don't know" in a polite manner.
+    About: You are a Product Recommendation Agent who gets his context from the retrieved descriptions of the products that matches best with the User's query. User is a human who, as a customer, wants to buy a product from this application.
+    Answer my questions based on your knowledge and our older conversation.
 
-    {context}
+    Given below is the summary of conversation between you (AI) and the human:
+    Context: {chat_history}
 
-    Given the following conversation and a follow up question, answer the question.
+    Now use this summary of previous conversations and the retrieved descriptions of products to answer the following question:
+    Question: {question}
 
-    {chat_history}
-
-    question: {question}
+    Note:
+    1. After answering the question, do remember what you answered and add it to the summary of conversation. While summarizing, mention about what is written in About section only once.
+    2. If you do not know the answer to a question, just say "I don't know" in a polite manner.
     '''
 
     return PromptTemplate(
-        template=prompt_template, input_variables=["context", "chat_history", "question"]
+        template=prompt_template, input_variables=["chat_history", "question"]
     )
 
 @st.cache_resource(show_spinner=False)
@@ -99,9 +100,10 @@ def Retriever():
 
 @st.cache_data(show_spinner=False)
 def search(_retriever, user_question):
+    prompt = PROMPT().format(question=user_question, chat_history=memory().load_memory_variables({})['chat_history'][0].content)
     # res = _retriever({"question": user_question})
-    res = _retriever(PROMPT().format(question=user_question, chat_history=memory().chat_memory.messages, context=''))
-    print(memory().load_memory_variables({})['chat_history'])
+    st.session_state.last_prompt = prompt
+    res = _retriever({"question": prompt})
     return res
 
 #############################################################################################################
@@ -139,9 +141,26 @@ def init():
 
         st.subheader('Parameters')
         K = st.slider('K', 1, 10, K, help='Sets max number of products  \nthat can be retrieved')
+
+        st.write('---')
+
+        st.subheader('Debugging Tools')
+
+        col1, col2 = st.columns([1,1])
+        if 'debugging_output' not in st.session_state:
+            st.session_state.debugging_output = ''
+        with col1:
+            if st.button('Examine Memory'):
+                mem = memory().load_memory_variables({})['chat_history'][0].content
+                st.session_state.debugging_output = mem if mem!='' else 'Memory is empty'
+        with col2:
+            if st.button('Show Prompt'):
+                if 'last_prompt' not in st.session_state:
+                    st.session_state.last_prompt = 'No prompt generated yet'
+                st.session_state.debugging_output = st.session_state.last_prompt
+        st.write(st.session_state.debugging_output)
+
         
-
-
     st.header('BigBasket Products',divider=True)
 
 def display_data(res):
