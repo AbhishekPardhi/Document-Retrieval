@@ -100,10 +100,9 @@ def Retriever():
 
 @st.cache_data(show_spinner=False)
 def search(_retriever, user_question):
-    prompt = PROMPT().format(question=user_question, chat_history=memory().load_memory_variables({})['chat_history'][0].content)
+    gen_prompt = PROMPT().format(question=user_question, chat_history=memory().load_memory_variables({})['chat_history'][0].content)
     # res = _retriever({"question": user_question})
-    st.session_state.last_prompt = prompt
-    res = _retriever({"question": prompt})
+    res = _retriever({"question": gen_prompt})
     return res
 
 #############################################################################################################
@@ -141,25 +140,6 @@ def init():
 
         st.subheader('Parameters')
         K = st.slider('K', 1, 10, K, help='Sets max number of products  \nthat can be retrieved')
-
-        st.write('---')
-
-        st.subheader('Debugging Tools')
-
-        col1, col2 = st.columns([1,1])
-        if 'debugging_output' not in st.session_state:
-            st.session_state.debugging_output = ''
-        with col1:
-            if st.button('Examine Memory'):
-                mem = memory().load_memory_variables({})['chat_history'][0].content
-                st.session_state.debugging_output = mem if mem!='' else 'Memory is empty'
-        with col2:
-            if st.button('Show Prompt'):
-                if 'last_prompt' not in st.session_state:
-                    st.session_state.last_prompt = 'No prompt generated yet'
-                st.session_state.debugging_output = st.session_state.last_prompt
-        st.write(st.session_state.debugging_output)
-
         
     st.header('BigBasket Products',divider=True)
 
