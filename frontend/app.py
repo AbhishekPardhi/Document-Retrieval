@@ -26,7 +26,7 @@ QDRANT_API_KEY = os.getenv('QDRANT_API_KEY')
 COLLECTION_NAME = os.getenv('COLLECTION_NAME')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
-K=2
+K=4
 
 #############################################################################################################
 #############################################################################################################
@@ -46,6 +46,7 @@ def PROMPT():
 
     Note:
     1. After answering the question, do remember what you answered and add it to the summary of conversation. While summarizing, mention about what is written in About section only once.
+    2. If you do not know the answer to a question, just say "I don't know" in a polite manner.
     '''
 
     return PromptTemplate(
@@ -54,7 +55,12 @@ def PROMPT():
 
 @st.cache_resource(show_spinner=False)
 def load_model():
-    return ChatOpenAI(model_name='gpt-3.5-turbo')
+    try:
+        model = ChatOpenAI(model_name='gpt-3.5-turbo')
+    except Exception as e:
+        st.error(e)
+        model = None
+    return model
 
 llm = load_model()
 
@@ -98,7 +104,6 @@ def Chain():
         retriever=retriever(),
         memory=memory(),
         return_source_documents=True,
-        reduce_k_below_max_tokens=True
     )
 
     return chain
@@ -107,7 +112,11 @@ def Chain():
 @st.cache_data(show_spinner=False)
 def search(_chain, user_question):
     gen_prompt = PROMPT().format(question=user_question, chat_history=memory().load_memory_variables({})['chat_history'][0].content)
-    res = _chain({"question": gen_prompt})
+    try:
+        res = _chain({"question": gen_prompt})
+    except Exception as e:
+        st.error(e)
+        res = None
     return res
 
 #############################################################################################################
@@ -149,9 +158,13 @@ def init():
 
 # Display the retrieved products
 def display_data(res):
-    srcs = [json.loads(row.page_content) for row in res['source_documents']]
+    try:
+        srcs = [json.loads(row.page_content) for row in res['source_documents']]
 
-    df = pd.DataFrame(srcs)
+        df = pd.DataFrame(srcs)
+    except Exception as e:
+        st.error(e)
+        return
 
     df1 = df[['product','brand', 'sale_price', 'rating', 'description']]
 
@@ -204,12 +217,19 @@ def main():
     for message in st.session_state.messages: # Display the prior chat messages
         with st.chat_message(message["role"]):
             st.write(message["content"])
-
+    
     # If last message is not from assistant, generate a new response
     if st.session_state.messages[-1]["role"] != "assistant":
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
+                start_time = time.time()
                 res = search(chain, prompt)
+                end_time = time.time()
+                st.toast(f'Search completed in :green[{end_time - start_time:.2f}] seconds', icon='✅')
+                if res is None:
+                    st.error("Something went wrong. Please try again.")
+                    return
+
                 answer = res['answer']
                 message = {"role": "assistant", "content": answer}
                 st.session_state.messages.append(message) # Add response to message history
