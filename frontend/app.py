@@ -5,9 +5,9 @@ import os
 import json
 import time
 import pandas as pd
+from dotenv import load_dotenv
 import streamlit as st
 from streamlit_extras.mention import mention
-from dotenv import load_dotenv
 
 import qdrant_client
 from langchain.vectorstores import Qdrant
@@ -31,6 +31,7 @@ K=2
 #############################################################################################################
 #############################################################################################################
 
+# Promp Template to be used for generating questions
 @st.cache_resource(show_spinner=False)
 def PROMPT():
     prompt_template = '''
@@ -45,7 +46,6 @@ def PROMPT():
 
     Note:
     1. After answering the question, do remember what you answered and add it to the summary of conversation. While summarizing, mention about what is written in About section only once.
-    2. If you do not know the answer to a question, just say "I don't know" in a polite manner.
     '''
 
     return PromptTemplate(
@@ -58,6 +58,7 @@ def load_model():
 
 llm = load_model()
 
+# Memory to store the conversation history
 def memory():
     if 'memory' not in st.session_state:
         st.session_state.memory = ConversationSummaryMemory(
@@ -68,9 +69,9 @@ def memory():
         )
     return st.session_state.memory
 
-
-# @st.cache_resource(show_spinner=False)
-def Retriever():
+# Retriever to retrieve the products from the database
+@st.cache_resource(show_spinner=False)
+def retriever():
     global K
     client = qdrant_client.QdrantClient(
         url=QDRANT_URL,
@@ -87,10 +88,14 @@ def Retriever():
 
     retriever = vector_store.as_retriever(search_kwargs={'k':K})
 
+    return retriever
+
+# Chain to chain the retriever with memory
+def Chain():
     chain = RetrievalQAWithSourcesChain.from_chain_type(
         llm=llm,
         chain_type="stuff",
-        retriever=retriever,
+        retriever=retriever(),
         memory=memory(),
         return_source_documents=True,
         reduce_k_below_max_tokens=True
@@ -98,16 +103,17 @@ def Retriever():
 
     return chain
 
+# Search function to search for the products
 @st.cache_data(show_spinner=False)
-def search(_retriever, user_question):
+def search(_chain, user_question):
     gen_prompt = PROMPT().format(question=user_question, chat_history=memory().load_memory_variables({})['chat_history'][0].content)
-    # res = _retriever({"question": user_question})
-    res = _retriever({"question": gen_prompt})
+    res = _chain({"question": gen_prompt})
     return res
 
 #############################################################################################################
 #############################################################################################################
 
+# Initialize the app
 def init():
     global K
 
@@ -132,22 +138,20 @@ def init():
 
         mention(
             label="Document-Retrieval",
-            icon="github",  # GitHub is also featured!
+            icon="github",
             url="https://github.com/AbhishekPardhi/Document-Retrieval",
         )
-
-        # st.write('---')
 
         st.subheader('Parameters')
         K = st.slider('K', 1, 10, K, help='Sets max number of products  \nthat can be retrieved')
         
     st.header('BigBasket Products',divider=True)
 
+# Display the retrieved products
 def display_data(res):
     srcs = [json.loads(row.page_content) for row in res['source_documents']]
 
     df = pd.DataFrame(srcs)
-    # df.set_index('product', inplace=True)
 
     df1 = df[['product','brand', 'sale_price', 'rating', 'description']]
 
@@ -191,16 +195,8 @@ def main():
         st.session_state.messages = [
             {"role": "assistant", "content": "Hello 👋\n\n I am here to help you choose the product that you wanna buy!"}
         ]
-    
-    # Display chat messages from history on app rerun
-    # for message in st.session_state.messages:
-    #     with st.chat_message(message["role"]):
-    #         st.markdown(message["content"])
 
-    retriever = Retriever()
-
-    # with st.chat_message("assistant"):
-    #     st.write("Hello 👋\n\n I am here to help you choose the product that you wanna buy!")
+    chain = Chain()
 
     if prompt:=st.chat_input("Say something"): # Prompt for user input and save to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
@@ -213,9 +209,8 @@ def main():
     if st.session_state.messages[-1]["role"] != "assistant":
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
-                res = search(retriever, prompt)
+                res = search(chain, prompt)
                 answer = res['answer']
-                # st.write(response.response)
                 message = {"role": "assistant", "content": answer}
                 st.session_state.messages.append(message) # Add response to message history
 
@@ -233,33 +228,6 @@ def main():
 
                 # Dsiplay product details
                 display_data(res)
-
-        # with st.chat_message("user"):
-        #     st.markdown(f'{prompt}')
-
-        # # Recommend me some product using which I can make bread
-
-        # res = search(retriever, prompt)
-        # answer = res['answer']
-        # # answer = prompt
-
-        # # Display assistant response in chat message container
-        # with st.chat_message("assistant"):
-        #     message_placeholder = st.empty()
-        #     full_response = ""
-
-        #     # Simulate stream of response with milliseconds delay
-        #     for chunk in answer.split():
-        #         full_response += chunk + " "
-        #         time.sleep(0.05)
-        #         # Add a blinking cursor to simulate typing
-        #         message_placeholder.markdown(full_response + "▌")
-        #     message_placeholder.markdown(full_response)
-
-        #     # Dsiplay product details
-        #     display_data(res)
-
-
 
 if __name__ == "__main__":
     main()
