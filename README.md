@@ -12,6 +12,18 @@ This repo is an implementation of [Document Retrieval](https://python.langchain.
 ## How does it work?
 The search engine uses [RetrievalQAWithSourcesChain](https://js.langchain.com/docs/modules/chains/popular/vector_db_qa) along with [ConversationSummaryMemory](https://python.langchain.com/docs/modules/memory/types/summary) to store chat history and use it as a context along with the retrived documents from QdrantDB to answer any follow up question. This whole process is also known as [Retrieval-augmented generation](https://python.langchain.com/docs/use_cases/question_answering/)
 
+I've used a custom Prompt Template to cater to this specific use case, which incorporates summarized chat history as a context while answering any follow up question. Look how the context is added in the below prompt:
+
+       About: You are a Product Recommendation Agent who gets his context from the retrieved descriptions of the products that matches best with the User's query. User is a human who, as a customer, wants to buy a product from this application.
+
+       Given below is the summary of conversation between you (AI) and the user (Human):
+    💡Context: The AI recommends the Hair Oil - Ayurvedic Care by K.P. Namboodiris, rated 4.3 with a price of ₹120, and the Javakusum Hair Oil by Just Herbs, rated 4.0 with a price of ₹535.5, as hair care products.
+
+       Now use this summary of previous conversations and the retrieved descriptions of products to answer the following question asked by the user:
+    ❓Question: What are the prices of the products you mentioned earlier?
+
+       Note: While answering the question, give only one short sentence description along with rating and price (in INR ₹) for each retrived product. Do not give any unnecessary information. Also, do not repeat the information that is already present in the context. The answer should be crisp so that it can fit the token limit. The tone of the answer should be like a polite and friendly AI Assistant.
+
 ## API
 I've used FastAPI for the retreival service which can be ran with curl command as follows:
 ```
@@ -97,4 +109,4 @@ Complete Code (dev) for performing DocRetrieval over bigBasketProducts.csv could
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AbhishekPardhi/Document-Retrieval/blob/main/test.ipynb)
 
 ## Limitations and Future Scope
-Currently it takes ~40 seconds to get answer from the model. This can be improved further by using a smaller model (having less number of parameters) and/or by using quantization while adding texts to the vectorDB. Inference speed can also be increased by caching the retriever chain.
+Currently it takes $30$ seconds (with $K=2$) to get answer from the model. This can be improved further by using a smaller model (having less number of parameters) and/or by using quantization while adding texts to the vectorDB. Inference speed can also be increased by caching the retriever chain.

@@ -43,7 +43,7 @@ def PROMPT():
     Now use this summary of previous conversations and the retrieved descriptions of products to answer the following question asked by the user:
     Question: {question}
 
-    Note: While answering the question, give only the important information about the product. Do not give any unnecessary information. Also, do not repeat the information that is already present in the context. The answer should be crisp so that it can fit the token limit.
+    Note: While answering the question, give only one short sentence description along with rating and price (in INR ₹) for each retrived product. Do not give any unnecessary information. Also, do not repeat the information that is already present in the context. The answer should be crisp so that it can fit the token limit. The tone of the answer should be like a polite and friendly AI Assistant.
     '''
     # prompt_template = '''
     # About: You are a Product Recommendation Agent who gets his context from the retrieved descriptions of the products that matches best with the User's query. User is a human who, as a customer, wants to buy a product from this application.
@@ -233,7 +233,7 @@ def main():
 
     for message in st.session_state.messages: # Display the prior chat messages
         with st.chat_message(message["role"]):
-            st.write(message["content"])
+            st.write(message["content"], unsafe_allow_html=False)
     
     # If last message is not from assistant, generate a new response
     if st.session_state.messages[-1]["role"] != "assistant":
@@ -248,6 +248,7 @@ def main():
                     return
 
                 answer = res['answer']
+                print('answer', answer)
                 message = {"role": "assistant", "content": answer}
                 st.session_state.messages.append(message) # Add response to message history
 
@@ -260,8 +261,8 @@ def main():
                     full_response += chunk + " "
                     time.sleep(0.05)
                     # Add a blinking cursor to simulate typing
-                    message_placeholder.markdown(full_response + "▌", unsafe_allow_html=False)
-                message_placeholder.markdown(full_response, unsafe_allow_html=False)
+                    message_placeholder.write(full_response + "▌", unsafe_allow_html=False)
+                message_placeholder.write(full_response, unsafe_allow_html=False)
 
                 # Dsiplay product details
                 display_data(res)
