@@ -24,6 +24,28 @@ I've used a custom Prompt Template to cater to this specific use case, which inc
 
        Note: While answering the question, give only one short sentence description along with rating and price (in INR ₹) for each retrived product. Do not give any unnecessary information. Also, do not repeat the information that is already present in the context. The answer should be crisp so that it can fit the token limit. The tone of the answer should be like a polite and friendly AI Assistant.
 
+## Results
+Below are a few sample test cases along with their results:
+
+### Sample 1
+```
+[Human]: Suggest me some snacks to eat at night
+
+[AI]: I suggest trying the Chips - Banana, Khara with a rating of 4.1 and priced at ₹75, or the Instant - Adai Dosa Mix with a rating of 4.2 and priced at ₹145, or the Banana Chips with a rating of 3.7 and priced at ₹95.
+```
+### Sample 2
+```
+[Human]: I've got Acne, can you help me buy a product that can remove this?
+
+[AI]: Acnes Clarifying Face Wash is a daily face wash with a mild peeling effect suitable for all skin types, rated 3.9 with a price of ₹110.
+```
+### Sample 3
+```
+[Human]: What is the best product for hair nourishment?
+
+[AI]: The best product for hair nourishment is the Hair Cream For Men - Daily Use by USTRAA, with a rating of 3.9 and a price of ₹153.
+```
+
 ## API
 I've used FastAPI for the retreival service which can be ran with curl command as follows:
 ```
