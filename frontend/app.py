@@ -45,20 +45,6 @@ def PROMPT():
 
     Note: While answering the question, give only one short sentence description along with rating and price (in INR ₹) for each retrived product. Do not give any unnecessary information. Also, do not repeat the information that is already present in the context. The answer should be crisp so that it can fit the token limit. The tone of the answer should be like a polite and friendly AI Assistant.
     '''
-    # prompt_template = '''
-    # About: You are a Product Recommendation Agent who gets his context from the retrieved descriptions of the products that matches best with the User's query. User is a human who, as a customer, wants to buy a product from this application.
-    # Answer my questions based on your knowledge and our older conversation.
-
-    # Given below is the summary of conversation between you (AI) and the human:
-    # Context: {chat_history}
-
-    # Now use this summary of previous conversations and the retrieved descriptions of products to answer the following question:
-    # Question: {question}
-
-    # Note:
-    # 1. After answering the question, do remember what you answered and add it to the summary of conversation. While summarizing, mention about what is written in About section only once.
-    # 2. If you do not know the answer to a question, just say "I don't know" in a polite manner.
-    # '''
 
     return PromptTemplate(
         template=prompt_template, input_variables=["chat_history", "question"]
@@ -127,10 +113,7 @@ def Chain():
 def search(_chain, user_question):
     gen_prompt = PROMPT().format(question=user_question, chat_history=memory().load_memory_variables({})['chat_history'][0].content)
     try:
-        print(gen_prompt)
         res = _chain(gen_prompt)
-        # res = _chain(user_question)
-        print(memory().load_memory_variables({})['chat_history'][0].content)
     except Exception as e:
         st.error(e)
         res = None
@@ -261,8 +244,8 @@ def main():
                     full_response += chunk + " "
                     time.sleep(0.05)
                     # Add a blinking cursor to simulate typing
-                    message_placeholder.write(full_response + "▌", unsafe_allow_html=False)
-                message_placeholder.write(full_response, unsafe_allow_html=False)
+                    message_placeholder.markdown(full_response + "▌", unsafe_allow_html=False)
+                message_placeholder.markdown(full_response, unsafe_allow_html=False)
 
                 # Dsiplay product details
                 display_data(res)

@@ -28,28 +28,28 @@ I've used a custom Prompt Template to cater to this specific use case, which inc
 I've used FastAPI for the retreival service which can be ran with curl command as follows:
 ```
 curl -X 'GET' \
-  'http://127.0.0.1:8000/api/search?q=Suggest%20me%20some%20hair%20care%20products&num_results=2' \
+  'http://127.0.0.1:8000/api/search?q=Hey%21%20My%20name%20is%20Abhishek.%20Suggest%20me%20some%20hair%20care%20products&num_results=2' \
   -H 'accept: application/json'
 ```
 Response:
 ```
 {
   "result": {
-    "answer": " Suggested hair care products include the Daily Use Hair Conditioner - For Men and the Hairfall Control Shampoo.\n",
+    "answer": "I recommend the Hair Oil - Ayurvedic Care by K.P. Namboodiris (rating: 4.3, price: ₹120), Javakusum Hair Oil by Just Herbs (rating: 4.0, price: ₹535.5), and Ayurvedic Shampoo - Hair Care by K.P. Namboodiris (rating: 4.6, price: ₹50).\n",
     "products": [
       {
-        "product": "Daily Use Hair Conditioner - For Men",
-        "brand": "USTRAA",
-        "sale_price": 153.23,
-        "rating": 3.8,
-        "description": "Using conditioner after shampoo keeps your hair soft and manageable. This daily use conditioner contains Vitamin E which helps to increase blood flow to the scalp and promote hair health and quality. It also has Water Hyssop (Brahmi) which is one of best-known Ayurvedic ingredients that strengthen hair follicles and checks split ends. Due to the presence of wheat gram, it is enriched with Vitamin B which is a great conditioner for hair. It has Evening Primrose which nourishes the scalp and promotes healthy hair growth."
+        "product": "Hair Oil - Ayurvedic Care",
+        "brand": "K.P. Namboodiris",
+        "sale_price": 120,
+        "rating": 4.3,
+        "description": "Improves hair growth, prevents hair loss, prevent premature greying of hair and fight against dandruff.  For Beauty tips, tricks & more visit https://bigbasket.blog/"
       },
       {
-        "product": "Hairfall Control Shampoo",
-        "brand": "Aroma Magic ",
-        "sale_price": 182.75,
-        "rating": 4.1,
-        "description": "This Hairfall control shampoo is 100% free of parabens, petrochemicals, phthalates, sulphates, toxic ingredients, artificial colouring and fragrances. Enriched with natural oils and essential oils of clary sage and lavender, it helps balance the pH levels of the scalp and strengthen hair strands. The plant juice of aloe vera and reetha deeply cleans and conditions the hair from the root to the tips. The extracts of thyme, peppermint and natural vitamins increase blood circulation to the scalp, thereby promoting hair growth and shine. Tocopherol in its formulation hydrates hair fibres while restoring natural moisture levels of the scalp, giving you back the control over your luscious hair."
+        "product": "Ayurvedic Shampoo - Hair Care",
+        "brand": "K.P. Namboodiris",
+        "sale_price": 50,
+        "rating": 4.6,
+        "description": "Natual Shampoo that conditions from deep within, gently cleansing, nourishing the hairs to keep hair strong, soft and shining.  For Beauty tips, tricks & more visit https://bigbasket.blog/"
       }
     ]
   }
