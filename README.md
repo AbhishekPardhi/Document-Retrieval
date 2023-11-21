@@ -1,9 +1,16 @@
 # Document-Retrieval (Qdrant+LangChain+FastAPI)
+[![VectorDB: Qdrant](https://img.shields.io/badge/VectorDB-Qdrant-blue)](https://github.com/qdrant/qdrant)
+[![Embeddings: OpenAI](https://img.shields.io/badge/Embeddings-OpenAI-blue)](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings)
+[![Retriever: LanghChain](https://img.shields.io/badge/Retriever-LanghChain-blue)](https://github.com/langchain-ai/langchain)
+[![UI: streamlit](https://img.shields.io/badge/UI-streamlit-blue)](https://streamlit.io/) \
 This repo is an implementation of [Document Retrieval](https://python.langchain.com/docs/modules/data_connection/) as part of the Assignment of chaabi for SDE-1 role - Placements'23. This Query Engine uses [Qdrant](https://github.com/qdrant/qdrant) for vector database, [LangChain](https://github.com/langchain-ai/langchain) for performing semantic search and [Streamlit](https://streamlit.io/) for user-interface. The DB is hosted on Qdrant Cloud as a cluster with a collection of vectors. I've used [OpenAIEmbeddings](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings) for embedding the vectors.
 
 ## DocRetrieval in action
 
 ![demo](data/chat-demo.gif)
+
+## How does it work?
+The search engine uses [RetrievalQAWithSourcesChain](https://js.langchain.com/docs/modules/chains/popular/vector_db_qa) along with [ConversationSummaryMemory](https://python.langchain.com/docs/modules/memory/types/summary) to store chat history and use it as a context along with the retrived documents from QdrantDB to answer any follow up question. This whole process is also known as [Retrieval-augmented generation](https://python.langchain.com/docs/use_cases/question_answering/)
 
 ## API
 I've used FastAPI for the retreival service which can be ran with curl command as follows:
@@ -90,4 +97,4 @@ Complete Code (dev) for performing DocRetrieval over bigBasketProducts.csv could
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AbhishekPardhi/Document-Retrieval/blob/main/test.ipynb)
 
 ## Limitations and Future Scope
-Currently the chain of chats are independent of each other. This can be easily changed by using previous responses as a context while retrieving results for the current question. But this will also increase the number of tokens that will be used for performing search operation, and hence the cost of each search.
+Currently it takes ~40 seconds to get answer from the model. This can be improved further by using a smaller model (having less number of parameters) and/or by using quantization while adding texts to the vectorDB. Inference speed can also be increased by caching the retriever chain.
