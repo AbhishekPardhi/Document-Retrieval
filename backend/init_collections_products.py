@@ -31,8 +31,6 @@ def upload_embeddings():
     metadatas = [{'source':int(df.loc[i][0]), 'row':i} for i in range(len(df))]
     df = df.apply(lambda x: x.to_json(), axis=1)
 
-    print(df[0])
-
     docs = [row for row in df]
 
     client.recreate_collection(
